@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<u04598637_HW06.Models.product>
 
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Product List";
 }
 
 <h2>Products</h2>
@@ -9,56 +9,191 @@
 <p>
     <div class="input-group">
         <div class="form-outline">
-            <input type="search" id="form1" class="form-control" placeholder="Enter Product Name..." />
-        <button type="button" class="btn btn-primary">
-            Search
-        </button>
-        <a href='@Url.Action("Create", "products")' class="btn btn-info">Create</a>
-    </div>
+            <input type="search" name="searchString" autocomplete="off" class="form-control" placeholder="Enter Product Name..." />
+            <button type="submit" class="btn btn-primary">
+                Search
+            </button>
+            <a class="btn btn-info" onclick="PopupForm('@Url.Action("Create","products")')">Create</a>
+        </div>
 </p>
-<table class="table">
-    <tr>
-        <th>
-            Name
-        </th>
-        <th>
-            Year
-        </th>
-        <th>
-            Price
-        </th>
-        <th>
-            Brand
-        </th>
-        <th>
-            Category
-        </th>
-        <th></th>
-    </tr>
-
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.product_name)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.model_year)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.list_price)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.brand.brand_name)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.category.category_name)
-        </td>
-        <td>
-            <a href='@Url.Action("Edit", "products", new { id = item.product_id })'class="btn btn-primary">Edit</a> |
-            <a href='@Url.Action("Details", "products", new { id = item.product_id })'class="btn btn-info">Details</a> |
-            <a href='@Url.Action("Delete", "products", new { id = item.product_id })'class="btn btn-danger">Delete</a> 
-        </td>
-    </tr>
-}
-
+<table id ="ProductTable" class="table">
+    <thead>
+        <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Year
+            </th>
+            <th>
+                Price
+            </th>
+            <th>
+                Brand
+            </th>
+            <th>
+                Category
+            </th>
+            <th></th>
+        </tr>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.product_name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.model_year)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.list_price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.brand.brand_name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.category.category_name)
+                </td>
+                <td>
+                    <a href='@Url.Action("Edit", "products", new { id = item.product_id })' class="btn btn-primary">Edit</a> |
+                    <a href='@Url.Action("Details", "products", new { id = item.product_id })' class="btn btn-info">Details</a> |
+                    <a href='@Url.Action("Delete", "products", new { id = item.product_id })' class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </thead>
 </table>
+
+<link href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap.min.css" rel="stylesheet" />
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+
+@section scripts{
+
+    <script src="//cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap.min.js"></script>
+
+    @*<script>
+
+        var Popup, dataTable;
+
+        $(document).ready(function () {
+            dataTable = $("#ProductTable").DataTable({
+
+                "ajax": {
+
+                    "url": "/products/GetData",
+                    "type": "GET",
+                    "datatype": "json"
+                },
+
+                "columns": [
+                    { "data": "Name" },
+                    { "data": "Year" },
+                    { "data": "Price" },
+                    { "data": "Brand" },
+                    { "data": "Category" },
+                    {
+                        "data": "product_id", "render": function (data) {
+
+                            return "<a class='btn btn-default btn-sm' onclick=PopupForm('@Url.Action("StoreOrEdit","products")/" + data + "')><i class='fa fa-pencil'></i>Edit</a> <a class='btn btn-danger btn-sm' style='margin-left:5px' onclick=Delete(" + data + ")><i class='fa fa-trash'></i>Delete</a>";
+                        },
+
+                        "orderable": false,
+                        "searchable": false,
+                        "width" : "150px"
+                    }
+
+
+                ],
+
+                "language": {
+                    "emptyTable" : "No data found please click on <b>Add New </b> Button"
+                }
+
+            });
+        });
+
+        function PopupForm(url) {
+
+            var formDiv = $('<div/>');
+            $.get(url)
+                .done(function (response) {
+
+                    formDiv.html(response);
+
+                    Popup = formDiv.dialog({
+
+                        autoOpen : true,
+                        resizable : false,
+                        title : 'Fill Product Details',
+                        height : 500,
+                        width : 700,
+                        close: function () {
+
+                            Popup.dialog('destroy').remove();
+                        }
+
+                    });
+
+                });
+        }
+
+        function SubmitForm(form) {
+
+            $.validator.unobtrusive.parse(form);
+            if ($(form).valid()) {
+
+            $.ajax({
+                type: "POST",
+                url: form.action,
+                data: $(form).serialize(),
+                success: function (data) {
+
+                    if (data.success) {
+
+                        Popup.dialog('close');
+                        dataTable.ajax.reload();
+
+                        $.notify(data.message, {
+                            globalPosition: "top center",
+                            className:"success"
+                        })
+
+
+                    }
+                }
+                });
+            }
+
+            return false;
+
+        }
+
+        function Delete(id) {
+            if (confirm('Are you sure to Delete this record ?')) {
+
+                $.ajax({
+
+                    type: "POST",
+                    url: '@Url.Action("Delete","products")/' + id,
+                    success: function (data) {
+
+                        if (data.success) {
+
+                            dataTable.ajax.reload();
+
+                            $.notify(data.message, {
+                                globalPosition: "top center",
+                                className: "success"
+                            })
+
+                        }
+                    }
+
+                });
+            }
+        }
+
+    </script>
+}*@
+}

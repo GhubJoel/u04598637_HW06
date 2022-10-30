@@ -7,8 +7,9 @@
 <h2>Edit</h2>
 
 
-@using (Html.BeginForm())
+@using (Html.BeginForm("StoreOrEdit", "product", FormMethod.Post, new { onsubmit = "return SubmitForm(this)" }))
 {
+    @Html.HiddenFor(model => model.product_id)
     @Html.AntiForgeryToken()
     
     <div class="form-horizontal">

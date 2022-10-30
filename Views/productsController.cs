@@ -7,19 +7,75 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using u04598637_HW06.Models;
+using PagedList;
+using u04598637_HW06.Helper;
 
 namespace u04598637_HW06.Views
 {
     public class productsController : Controller
     {
         private BikeStoresEntities db = new BikeStoresEntities();
-
         // GET: products
         public ActionResult Index()
         {
-            var products = db.products.Include(p => p.brand).Include(p => p.category);
-            return View(products.ToList());
+            BikeStoresEntities db = new BikeStoresEntities();
+            List<product> products = db.products.ToList();
+            return View(products);
         }
+
+        public ActionResult GetData()
+        {
+            using(BikeStoresEntities db = new BikeStoresEntities())
+            {
+                List<product> productsList = db.products.ToList<product>();
+                return Json(new { data = productsList }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+      [HttpGet]
+        public ActionResult StoreOrEdit(int id = 0)
+        {
+            if (id == 0)
+                return View(new product());
+            else
+            {
+                using(BikeStoresEntities db = new BikeStoresEntities())
+                {
+                    return View(db.products.Where(x => x.product_id == id).FirstOrDefault<product>());
+                }
+            }
+        }
+
+      [HttpPost]
+        public ActionResult StoreOrEdit(product productob)
+        {
+            using(BikeStoresEntities db = new BikeStoresEntities())
+            {
+                if(productob.product_id == 0)
+                {
+                    db.products.Add(productob);
+                    db.SaveChanges();
+                    return Json(new { success = true, message = "Saved Successfully", JsonRequestBehavior.AllowGet });
+                }
+                else
+                {
+                    db.Entry(productob).State = EntityState.Modified;
+                    db.SaveChanges();
+                    return Json(new { success = true, message = "Updated Successfully", JsonRequestBehavior.AllowGet });
+                }
+            }
+        }
+
+      [HttpPost]
+        public ActionResult Delete(int id)
+        {
+            product emp = db.products.Where(x => x.product_id == id).FirstOrDefault<product>();
+
+            db.products.Remove(emp);
+            db.SaveChanges();
+            return Json(new { success = true, message = "Deleted Successfully", JsonRequestBehavior.AllowGet });
+        }
+     
 
         // GET: products/Details/5
         public ActionResult Details(int? id)
